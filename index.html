@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="iPhone対応の完全無料ギターコード確認＆弾き語り練習アプリ。コード押さえ方図、コード進行自動再生、歌詞付き自動スクロール機能を搭載。">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ギターコード">
+  <meta name="theme-color" content="#0b0f19">
+  <title>ギターコード確認＆弾き語りナビ | Pocket Guitar Studio</title>
+
+  <!-- PWA設定 & アプリアイコン -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+
+  <!-- スタイルシート -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- デスクトップ向けプレビュー切り替えバー -->
+  <div class="desktop-preview-bar">
+    <div>
+      <span class="badge-iphone">📱 iPhone最適化デザイン</span>
+      <span style="margin-left: 8px;">スマホの画面比率で直感的に操作できます</span>
+    </div>
+    <button id="btn-toggle-device-frame" class="btn-toggle-frame">📱 iPhoneフレーム: OFF</button>
+  </div>
+
+  <!-- デバイスラッパー -->
+  <main class="app-device-wrapper" id="app-device-wrapper">
+    <div class="device-container">
+      
+      <!-- iPhoneノッチ・ダイナミックアイランド演出 -->
+      <div class="iphone-dynamic-island"></div>
+
+      <!-- アプリ共通ヘッダー -->
+      <header class="app-header">
+        <div class="header-brand">
+          <span class="brand-logo-icon">🎸</span>
+          <div>
+            <h1>Pocket Guitar</h1>
+            <div class="header-tagline">いつでも弾けるコード＆弾き語りナビ</div>
+          </div>
+        </div>
+        <div class="header-status-badge">
+          <span class="indicator-pulse"></span>
+          <span>完全無料 0円</span>
+        </div>
+      </header>
+
+      <!-- メインコンテンツ領域（タブ切り替え） -->
+      <div class="app-content-area">
+
+        <!-- ==========================================
+             タブ 1: コード辞典
+             ========================================== -->
+        <section id="tab-chords" class="tab-view-content active">
+          <!-- ルート音選択 -->
+          <div class="section-title"><span>🎵</span> ルート音（根音）</div>
+          <div class="scroll-chips-row" id="root-buttons-list"></div>
+
+          <!-- コードタイプ選択 -->
+          <div class="section-title"><span>✨</span> コードの種類</div>
+          <div class="scroll-chips-row" id="type-buttons-list"></div>
+
+          <!-- メインダイアグラム表示パネル -->
+          <div class="glass-panel">
+            <div class="section-title" style="margin-bottom: 8px;"><span>📐</span> 押さえ方パターン切り替え</div>
+            <!-- ポジション切り替えピル -->
+            <div class="chord-positions-row" id="chord-positions-list"></div>
+
+            <!-- ダイアグラム描画ステージ -->
+            <div class="diagram-center-stage">
+              <div class="diagram-header-info">
+                <div class="chord-big-title" id="selected-chord-title">C</div>
+                <div class="chord-interactive-instruction">弦や指の位置をタップすると単音を確認できます</div>
+              </div>
+              <div class="fretboard-canvas-wrapper" id="chord-diagram-container"></div>
+            </div>
+
+            <!-- サウンド再生コントロール -->
+            <div class="chord-action-controls">
+              <button id="btn-play-current-chord" class="btn-primary-audio">
+                <span>🔊</span> コードを鳴らす (ストローク)
+              </button>
+              <button id="btn-strum-up" class="btn-secondary-audio">
+                <span>↑</span> アップ
+              </button>
+            </div>
+
+            <!-- 初心者向け押さえ方のアドバイス -->
+            <div class="chord-advice-card" id="chord-tips-text"></div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             タブ 2: コード進行 ＆ 自動再生
+             ========================================== -->
+        <section id="tab-progression" class="tab-view-content">
+          <div class="player-dashboard">
+
+            <!-- プリセット選択 -->
+            <div class="glass-panel" style="padding: 12px 16px;">
+              <label class="section-title" style="margin-bottom: 6px;">
+                <span>📚</span> 定番コード進行プリセット
+              </label>
+              <select id="preset-progression-select" class="custom-select-input">
+                <option value="pop">J-POP王道進行 (F → G → Em → Am)</option>
+                <option value="canon">カノン進行 (C → G → Am → Em → F → C → F → G)</option>
+                <option value="marusa">丸サ進行・おしゃれ (Fmaj7 → E7 → Am7 → C7)</option>
+                <option value="komuro">小室進行・疾走感 (Am → F → G → C)</option>
+                <option value="standby">スタンド・バイ・ミー進行 (G → Em → C → D)</option>
+              </select>
+            </div>
+
+            <!-- 現在再生中のコード大画面＆ダイアグラム -->
+            <div class="current-playing-banner">
+              <div>
+                <div class="playing-chord-label">現在弾くコード</div>
+                <div class="playing-chord-big" id="active-prog-chord-name">C</div>
+                <div class="next-chord-tag">次: <strong id="next-chord-preview-name">G</strong></div>
+              </div>
+              <div class="mini-fretboard-preview" id="mini-chord-diagram"></div>
+            </div>
+
+            <!-- 拍（メトロノーム）インジケーター -->
+            <div class="glass-panel" style="padding: 12px 16px;">
+              <div id="count-in-badge" class="count-in-badge">カウントイン準備中...</div>
+              <div class="beat-indicators-row">
+                <div class="beat-indicator-dot"></div>
+                <div class="beat-indicator-dot"></div>
+                <div class="beat-indicator-dot"></div>
+                <div class="beat-indicator-dot"></div>
+              </div>
+
+              <!-- 再生・一時停止コントロール -->
+              <div class="transport-buttons-row" style="margin-top: 10px;">
+                <button id="btn-prog-play" class="btn-transport-play">
+                  <span class="icon">▶</span> 再生開始
+                </button>
+                <button id="btn-prog-reset" class="btn-transport-reset">
+                  <span>⟲</span> 最初から
+                </button>
+              </div>
+
+              <!-- BPM・テンポ調整 -->
+              <div class="bpm-control-panel">
+                <button id="btn-bpm-minus" class="btn-step-bpm">−</button>
+                <input type="range" id="bpm-slider" class="bpm-slider-input" min="40" max="220" value="85">
+                <button id="btn-bpm-plus" class="btn-step-bpm">＋</button>
+                <div class="bpm-val-badge">BPM <span id="bpm-display-val">85</span></div>
+              </div>
+
+              <!-- サウンドオプション -->
+              <div class="audio-toggles-row">
+                <label class="switch-label">
+                  <input type="checkbox" id="toggle-metronome-sound" checked>
+                  <span>メトロノーム音</span>
+                </label>
+                <label class="switch-label">
+                  <input type="checkbox" id="toggle-guitar-sound" checked>
+                  <span>ギター和音</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- コード進行カード一覧 -->
+            <div class="glass-panel">
+              <div class="section-title"><span>🎼</span> コードの流れ（タップでその小節へ移動）</div>
+              <div class="progression-cards-scroll" id="progression-cards-list"></div>
+
+              <!-- コードクイック追加パレット -->
+              <div class="section-title" style="margin-top: 14px; margin-bottom: 6px;"><span>➕</span> コードを追加</div>
+              <div class="scroll-chips-row" id="quick-chords-palette"></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==========================================
+             タブ 3: 歌詞 ＆ 弾き語り
+             ========================================== -->
+        <section id="tab-songs" class="tab-view-content">
+          <!-- 楽曲選択と新規作成 -->
+          <div class="glass-panel" style="padding: 12px 16px;">
+            <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 10px;">
+              <select id="song-select-dropdown" class="custom-select-input" style="flex: 1;"></select>
+              <button id="btn-create-song" class="btn-chip" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #10b981;" title="新しい曲を追加">
+                <span>➕</span> 新規
+              </button>
+              <button id="btn-open-song-editor" class="btn-chip" style="background: rgba(255, 255, 255, 0.1);" title="現在の曲を編集">
+                <span>✏️</span> 編集
+              </button>
+            </div>
+
+            <!-- 楽曲操作補助ツール -->
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button id="btn-export-song" class="btn-tiny-action" style="flex: 1;">📤 この曲を書き出し (コピー)</button>
+              <button id="btn-import-song" class="btn-tiny-action" style="flex: 1;">📥 曲テキストを取り込み</button>
+            </div>
+          </div>
+
+          <!-- 表示モード切り替えスイッチ（縦譜面 vs 横ナビ） -->
+          <div class="song-mode-switcher-row">
+            <button type="button" class="btn-song-mode active" id="btn-mode-sheet" data-mode="sheet">
+              <span>📄</span> 縦譜面モード
+            </button>
+            <button type="button" class="btn-song-mode" id="btn-mode-timeline" data-mode="timeline">
+              <span>🎬</span> 横ナビ＆ダイアグラム同期
+            </button>
+          </div>
+
+          <!-- 1. 縦譜面モード パネル -->
+          <div id="song-panel-sheet" class="song-view-panel active">
+            <!-- 縦譜面ツールバー -->
+            <div class="song-controls-toolbar" style="margin-bottom: 8px;">
+              <button id="btn-song-autoscroll" class="song-btn-autoscroll">
+                <span class="icon">▶</span> 自動スクロール
+              </button>
+              <div class="song-aux-tools">
+                <button id="btn-scroll-speed" class="btn-tiny-action">速度: 2x</button>
+                <div style="display: flex; align-items: center; gap: 2px;">
+                  <button id="btn-song-key-minus" class="btn-tiny-action" title="半音下げる">♭</button>
+                  <span id="song-key-display" style="font-size: 0.78rem; font-weight: 700; min-width: 28px; text-align: center; color: var(--accent-amber);">±0</span>
+                  <button id="btn-song-key-plus" class="btn-tiny-action" title="半音上げる">♯</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 歌詞＆コード表示シート -->
+            <div class="glass-panel" style="padding: 16px;">
+              <div class="song-meta-header">
+                <h2 id="current-song-title" class="song-header-title">曲名</h2>
+                <div class="song-header-details">
+                  <span id="current-song-artist">アーティスト名</span>
+                  <span id="current-song-capo">Capo: 0</span>
+                </div>
+              </div>
+              <div id="song-lyrics-sheet-container" class="song-lyrics-sheet-container"></div>
+              <div style="font-size: 0.72rem; color: var(--text-sub); text-align: center; margin-top: 8px;">
+                💡 歌詞の上のコード名をタップすると、そのコードの音が鳴り押さえ方図が表示されます
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 横ナビ＆ダイアグラム同期 パネル（一体型カード形式） -->
+          <div id="song-panel-timeline" class="song-view-panel">
+            
+            <!-- 上部：スマート演奏コントロールバー -->
+            <div class="timeline-compact-toolbar glass-panel">
+              <div class="timeline-playback-controls">
+                <button id="btn-timeline-prev" class="btn-nav-step" title="前のフレーズへ">⏮ 前へ</button>
+                <button id="btn-timeline-play" class="btn-transport-play">
+                  <span class="icon">▶</span> 自動進行
+                </button>
+                <button id="btn-timeline-next" class="btn-nav-step" title="次のフレーズへ">次へ ⏭</button>
+              </div>
+
+              <div class="timeline-secondary-controls">
+                <!-- 速度スライダー -->
+                <div class="timeline-speed-setting">
+                  <span style="font-size: 0.75rem; color: var(--text-sub); font-weight: 700;">速度:</span>
+                  <input type="range" id="timeline-bpm-slider" class="bpm-slider-input" min="40" max="160" value="85">
+                  <span id="timeline-bpm-val" style="font-size: 0.78rem; font-weight: 700; color: var(--accent-amber); min-width: 54px;">85 BPM</span>
+                </div>
+
+                <!-- ギター音＆押さえ方事前設定ボタン -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <label class="switch-label" style="margin: 0; padding: 4px 8px; font-size: 0.75rem;">
+                    <input type="checkbox" id="toggle-timeline-sound" checked>
+                    <span>音</span>
+                  </label>
+                  <button id="btn-open-song-patterns-modal" class="btn-config-patterns" title="この曲のコード押さえ方を一覧で決める">
+                    <span>⚙️ 押さえ方設定</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- メインステージ：「歌詞＋コード＋押さえ方」がひとまとまりになった横スクロールストリーム -->
+            <div class="timeline-stream-container" id="timeline-stream-container">
+              <div class="timeline-stream-track" id="timeline-stream-track">
+                <!-- JavaScriptでここに .timeline-unit-card を生成 -->
+              </div>
+            </div>
+
+            <!-- 操作ヒント -->
+            <div class="timeline-bottom-hint">
+              <span>💡 カードをタップするとその位置にジャンプ＆ギター音が鳴ります（演奏中は表示に専念できます）</span>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==========================================
+             タブ 4: ギターチューナー（マイクピッチ判定）
+             ========================================== -->
+        <section id="tab-tuner" class="tab-view-content">
+          <div class="tuner-dashboard">
+            
+            <div class="tuner-dial-card">
+              <div class="tuner-target-note-badge" id="tuner-note-badge">--</div>
+              <div class="tuner-string-info" id="tuner-string-info">弦を弾いてください</div>
+              <div class="tuner-freq-text" id="tuner-freq-val">-- Hz</div>
+
+              <!-- セント誤差ゲージ（針） -->
+              <div class="tuner-cents-gauge">
+                <div class="tuner-cents-track"></div>
+                <div class="tuner-center-mark"></div>
+                <div class="tuner-needle" id="tuner-needle" style="left: 50%;"></div>
+              </div>
+              <div class="tuner-cents-labels">
+                <span>♭ 低い (-50)</span>
+                <span style="color: var(--accent-emerald); font-weight: bold;">合致 (0)</span>
+                <span>高い (+50) ♯</span>
+              </div>
+
+              <div class="tuner-status-pill" id="tuner-status-pill">マイク停止中</div>
+            </div>
+
+            <!-- マイク起動ボタン -->
+            <button id="btn-toggle-tuner-mic" class="btn-toggle-mic">
+              <span class="icon">🎙️</span> <span>チューナーを開始 (マイク許可)</span>
+            </button>
+
+            <!-- 基準音（音叉）で合わせる -->
+            <div class="glass-panel" style="width: 100%; padding: 14px;">
+              <div class="section-title"><span>🔔</span> 基準音（音叉）を鳴らして耳で合わせる</div>
+              <div class="reference-strings-grid">
+                <button class="btn-ref-tone" data-string="6"><span>6弦</span> <strong>E2 (82Hz)</strong></button>
+                <button class="btn-ref-tone" data-string="5"><span>5弦</span> <strong>A2 (110Hz)</strong></button>
+                <button class="btn-ref-tone" data-string="4"><span>4弦</span> <strong>D3 (147Hz)</strong></button>
+                <button class="btn-ref-tone" data-string="3"><span>3弦</span> <strong>G3 (196Hz)</strong></button>
+                <button class="btn-ref-tone" data-string="2"><span>2弦</span> <strong>B3 (247Hz)</strong></button>
+                <button class="btn-ref-tone" data-string="1"><span>1弦</span> <strong>E4 (330Hz)</strong></button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==========================================
+             タブ 5: 使い方 ＆ 無料アプリ化ガイド
+             ========================================== -->
+        <section id="tab-guide" class="tab-view-content">
+          <div class="glass-panel">
+            <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 10px;">📲 iPhoneのホーム画面に無料でアプリ化</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px;">
+              このアプリは「PWA（プログレッシブWebアプリ）」に対応しているため、App Storeの有料登録をしなくても、<strong>完全無料（0円）でiPhoneのホーム画面にアプリアイコンを置いて全画面で使えます。</strong>
+            </p>
+            
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 14px;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 6px;">【登録手順】</div>
+              <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 20px; line-height: 1.8;">
+                <li>iPhoneの <strong>Safari</strong> でこのWebページを開きます。</li>
+                <li>画面下部の中央にある <strong>「共有ボタン（四角から上矢印が出ているアイコン）」</strong> をタップします。</li>
+                <li>メニューから <strong>「ホーム画面に追加」</strong> を選びます。</li>
+                <li>右上の「追加」を押すと、本物のアプリと同じようにアイコンが並び、全画面で起動できます！</li>
+              </ol>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+              <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">🔒 費用とデータについて</div>
+              <ul style="font-size: 0.8rem; padding-left: 18px; line-height: 1.8;">
+                <li><strong>月額・年会費ゼロ</strong>：永久に完全無料で使用できます。</li>
+                <li><strong>端末内保存</strong>：入力した曲データはお使いのiPhone本体内に安全に保存されます。</li>
+                <li><strong>オフライン利用可能</strong>：一度開けば電波のない場所やアウトドアでも開いて練習できます。</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- 下部タブナビゲーションバー（iPhoneアプリ風） -->
+      <nav class="app-bottom-navbar">
+        <button class="nav-tab-btn active" data-tab="tab-chords">
+          <span class="nav-icon">🎸</span>
+          <span>コード辞典</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-progression">
+          <span class="nav-icon">⏱️</span>
+          <span>進行＆練習</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-songs">
+          <span class="nav-icon">🎤</span>
+          <span>歌詞＆弾き語り</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-tuner">
+          <span class="nav-icon">🎯</span>
+          <span>チューナー</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="tab-guide">
+          <span class="nav-icon">💡</span>
+          <span>無料アプリ化</span>
+        </button>
+      </nav>
+
+    </div>
+  </main>
+
+  <!-- コード確認ミニモーダル（歌詞タブ用） -->
+  <div id="chord-preview-modal" class="app-modal-overlay">
+    <div class="modal-window-card">
+      <button id="modal-close-btn" class="modal-close-icon">✕</button>
+      <div style="text-align: center; margin-bottom: 10px;">
+        <div id="modal-chord-name" style="font-size: 2rem; font-weight: 800; color: var(--accent-amber);">C</div>
+      </div>
+      <div id="modal-chord-diagram" style="display: flex; justify-content: center;"></div>
+      <div id="modal-chord-tips" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; text-align: center;"></div>
+    </div>
+  </div>
+
+  <!-- 楽曲作成・編集モーダル -->
+  <div id="song-editor-modal" class="app-modal-overlay">
+    <div class="modal-window-card" style="max-width: 440px;">
+      <button id="btn-close-song-editor" class="modal-close-icon">✕</button>
+      <h3 id="modal-song-editor-title" style="font-size: 1.1rem; margin-bottom: 14px; color: #fff;">曲の編集・新規登録</h3>
+      <input type="hidden" id="edit-song-id" value="">
+      
+      <div class="modal-form-group">
+        <label>曲名</label>
+        <input type="text" id="edit-song-title" class="modal-text-input" placeholder="例: マリーゴールド">
+      </div>
+      <div class="modal-form-group">
+        <label>アーティスト / メモ</label>
+        <input type="text" id="edit-song-artist" class="modal-text-input" placeholder="例: あいみょん">
+      </div>
+      <div class="modal-form-group">
+        <label>カポタスト (Capo)</label>
+        <input type="number" id="edit-song-capo" class="modal-text-input" min="0" max="7" value="0">
+      </div>
+      <div class="modal-form-group">
+        <label>歌詞とコード（[C]歌詞 の形式で入力）</label>
+        <!-- コードクイック挿入パレット -->
+        <div style="display: flex; gap: 4px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 6px;">
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="C">[C]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="G">[G]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="Am">[Am]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="F">[F]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="Em">[Em]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="Dm">[Dm]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="D">[D]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="A">[A]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="E">[E]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="D/F#">[D/F#]</button>
+          <button type="button" class="btn-tiny-action btn-insert-chord" data-chord="G/B">[G/B]</button>
+        </div>
+        <textarea id="edit-song-content" class="modal-textarea" placeholder="[C]空を見[G]上げて [Am]君を想[F]う..."></textarea>
+      </div>
+
+      <!-- 操作ボタン -->
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button id="btn-save-song" class="btn-primary-audio" style="flex: 2;">
+          <span>💾</span> 保存する
+        </button>
+        <button id="btn-delete-song" class="btn-secondary-audio" style="flex: 1; background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.4); color: #f43f5e;" title="この曲を削除">
+          <span>🗑️</span> 削除
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎵 この曲のコード押さえ方一覧設定モーダル -->
+  <div id="song-patterns-modal" class="app-modal-overlay">
+    <div class="modal-window-card" style="max-width: 440px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="font-size: 1.1rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 6px;">
+          <span>⚙️</span> コード押さえ方の事前設定
+        </h3>
+        <button id="btn-close-patterns-modal" class="modal-close-icon">✕</button>
+      </div>
+      <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+        この曲で弾くコードの押さえ方（オープンコードやハイコード等）を設定できます。選んだ内容は自動保存され、自動進行画面の一体型カードに反映されます。
+      </p>
+
+      <!-- ユニークコード一覧スクロール領域 -->
+      <div class="song-patterns-modal-scroll" id="song-patterns-modal-list">
+        <!-- JSでコードごとの選択セレクトとSVG指板プレビューを生成 -->
+      </div>
+
+      <div style="margin-top: 14px; text-align: right;">
+        <button id="btn-save-patterns-modal-done" class="btn-primary-audio" style="width: 100%;">
+          <span>✓</span> 設定を完了して演奏に戻る
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- スクリプト群 -->
+  <script src="js/audio.js"></script>
+  <script src="js/chord-data.js"></script>
+  <script src="js/fretboard-renderer.js"></script>
+  <script src="js/progression-player.js"></script>
+  <script src="js/song-editor.js"></script>
+  <script src="js/tuner.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- PWA Service Worker 登録（完全オフライン＆キャッシュ対応） -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('Pocket Guitar SW 登録完了:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('SW 登録エラー（HTTP環境等）:', err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
